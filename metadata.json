@@ -1,0 +1,6 @@
+{
+  "name": "Badminton Booking System",
+  "description": "Sistem Manajemen Pemesanan Lapangan Badminton Berbasis Web responsive, modern, dan premium.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

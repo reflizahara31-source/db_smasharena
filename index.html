@@ -1,0 +1,1286 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smash Arena - GOR Badminton Booking Center</title>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace']
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4', 100: '#dcfce7', 200: '#bbf7d0', 300: '#86efac',
+              400: '#4ade80', 500: '#10b981', 600: '#059669', 700: '#047857',
+              800: '#065f46', 900: '#064e3b'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    /* Custom Animations */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn {
+      animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    /* Printable Area Selector */
+    @media print {
+      body * { visibility: hidden; }
+      #printable-ticket, #printable-ticket * { visibility: visible; }
+      #printable-ticket { position: absolute; left: 0; top: 0; width: 100%; border: none !important; }
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 min-h-screen flex flex-col transition-colors duration-200">
+
+  <!-- HEADER NAVIGATION BAR -->
+  <header class="sticky top-0 z-40 bg-white/90 dark:bg-gray-950/90 backdrop-blur-md border-b border-gray-100 dark:border-gray-800 transition-colors">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <!-- Logo Brand -->
+      <div class="flex items-center gap-2 cursor-pointer" onclick="navigate('beranda')">
+        <div class="h-10 w-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-extrabold text-lg shadow-md shadow-emerald-600/10 active:scale-95 transition-transform">
+          S
+        </div>
+        <div class="flex flex-col">
+          <span class="font-black text-sm tracking-tight text-emerald-600 dark:text-emerald-400 leading-none">SMASH ARENA</span>
+          <span class="text-[10px] uppercase font-bold tracking-wider text-gray-400 dark:text-gray-500 mt-1">Badminton GOR</span>
+        </div>
+      </div>
+
+      <!-- Live Clock & Theme Switcher & Login Action triggers -->
+      <div class="flex items-center gap-3 sm:gap-5">
+        <!-- WIB Realtime Time indicator -->
+        <span class="hidden md:flex items-center gap-1.5 text-xs font-mono font-bold text-gray-400 dark:text-gray-500 bg-gray-50 dark:bg-gray-900 border border-dashed border-gray-200 dark:border-gray-800 px-3 py-1 rounded-full">
+          <i data-lucide="clock" class="w-3.5 h-3.5 text-emerald-500"></i>
+          <span id="live-time">00:00:00 WIB</span>
+        </span>
+
+        <!-- Notifications Indicator with Badge Dropdown -->
+        <div class="relative">
+          <button onclick="toggleNotificationDropdown()" class="p-2 text-gray-400 hover:text-emerald-500 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors relative cursor-pointer">
+            <i data-lucide="bell" class="w-5 h-5"></i>
+            <span id="notif-badge" class="absolute top-1 right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white dark:ring-gray-950 hidden"></span>
+          </button>
+          <!-- Notification Dropdown Menu -->
+          <div id="notif-dropdown" class="hidden absolute right-0 mt-2 w-80 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl shadow-xl z-50 p-4 animate-fadeIn">
+            <div class="flex items-center justify-between border-b border-gray-100 dark:border-gray-800 pb-2 mb-2">
+              <span class="text-xs font-black uppercase text-gray-500 tracking-wider">Notifikasi Sistem</span>
+              <button onclick="clearSystemNotifications()" class="text-[10px] text-red-500 hover:underline font-bold">Hapus Semua</button>
+            </div>
+            <div id="notif-list" class="flex flex-col gap-2 max-h-64 overflow-y-auto scrollbar-hide text-xs text-gray-500 dark:text-gray-400">
+              <!-- Dynamically Filled -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Light/Dark Mode Toggle Icon button -->
+        <button onclick="toggleDarkMode()" class="p-2 text-gray-400 hover:text-indigo-500 rounded-full hover:bg-gray-100 dark:hover:bg-gray-900 transition-colors cursor-pointer">
+          <i id="theme-icon" data-lucide="sun" class="w-5 h-5 text-amber-500"></i>
+        </button>
+
+        <!-- Auth button states -->
+        <div id="auth-unlogged" class="flex items-center gap-2">
+          <button onclick="openModal('login')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl transition-all shadow-md shadow-emerald-600/10 active:scale-95 flex items-center gap-1.5 cursor-pointer">
+            <i data-lucide="user" class="w-3.5 h-3.5"></i> Masuk
+          </button>
+        </div>
+        <div id="auth-logged" class="hidden flex items-center gap-3 border-l border-gray-100 dark:border-gray-800 pl-3 sm:pl-5">
+          <button onclick="goUserDashboard()" class="px-3.5 py-1.5 bg-emerald-50 dark:bg-emerald-950/20 border border-emerald-100 dark:border-emerald-900/30 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] rounded-lg cursor-pointer transition-all active:scale-95 flex items-center gap-1 shrink-0 font-sans">
+            <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i> Dashboard
+          </button>
+          <div class="flex flex-col text-right hidden sm:flex">
+            <span id="nav-user-name" class="text-xs font-black leading-none text-gray-800 dark:text-white">Active User</span>
+            <span id="nav-user-role" class="text-[9px] font-black uppercase text-emerald-500 tracking-wider mt-1">Pelanggan</span>
+          </div>
+          <button onclick="handleLogout()" class="p-2 text-red-500 hover:bg-red-500/10 rounded-full hover:scale-105 active:scale-95 transition-all cursor-pointer">
+            <i data-lucide="log-out" class="w-4.5 h-4.5"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- GUEST / LANDING VIEW PANEL -->
+  <main id="view-beranda" class="flex-grow flex flex-col">
+    <!-- Owner Broadcast Announcement Banner -->
+    <div id="owner-banner-container" class="bg-gradient-to-r from-emerald-600 via-teal-600 to-emerald-700 text-white px-4 py-3 flex items-center justify-center text-center text-xs font-semibold shadow-inner hidden">
+      <div class="flex items-center gap-2 max-w-4xl mx-auto flex-wrap justify-center">
+        <span class="px-2 py-0.5 bg-white/20 rounded text-[9px] font-black uppercase tracking-wider shrink-0 flex items-center gap-0.5"><i data-lucide="megaphone" class="w-3 h-3"></i> Pengumuman Pemilik GOR</span>
+        <span id="owner-announcement-text" class="tracking-tight block leading-snug"></span>
+      </div>
+    </div>
+
+    <!-- Hero Banner Section -->
+    <section class="relative bg-emerald-900 text-white py-16 px-4 md:px-8 text-center overflow-hidden">
+      <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(16,185,129,0.2),transparent_70%)] pointer-events-none"></div>
+      <div class="max-w-4xl mx-auto flex flex-col items-center relative z-10">
+        <div class="flex flex-wrap items-center justify-center gap-2 mb-4">
+          <span class="px-3.5 py-1.5 bg-emerald-500/15 border border-emerald-500/25 rounded-full text-xs font-extrabold text-emerald-400 uppercase tracking-widest">
+            ✨ RESERVASI INSTAN CEPAT & TERPERCAYA
+          </span>
+          <span id="gor-status-badge" class="px-3 py-1.5 bg-emerald-600 text-white border border-emerald-500/20 rounded-full text-[10px] font-black uppercase tracking-widest flex items-center gap-1.5 font-sans">
+            <span class="h-1.5 w-1.5 rounded-full bg-white animate-pulse"></span> GOR BUKA
+          </span>
+        </div>
+        <h1 class="text-3xl md:text-5xl font-black tracking-tight leading-tight max-w-2xl mb-4">
+          Rasakan Sensasi Main di Arena <span class="text-emerald-400">Bulutangkis Premium</span> Terbaik!
+        </h1>
+        <p class="text-sm md:text-base text-emerald-100 max-w-xl mb-8 leading-relaxed">
+          Pemesanan lapangan modern Smash Arena dengan lantai standar internasional, fasilitas mandi air hangat, kantin bertenaga, & sistem online instan 24 Jam.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button onclick="triggerBookingView()" class="px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-sm rounded-xl cursor-pointer shadow-lg shadow-emerald-500/25 border border-emerald-400/20 active:scale-95 transition-all">
+            Pesan Lapangan Sekarang
+          </button>
+          <a href="#section-fasilitas" class="px-6 py-3 bg-emerald-800/40 hover:bg-emerald-800/60 border border-emerald-700/30 text-white font-extrabold text-sm rounded-xl cursor-pointer active:scale-95 transition-all inline-flex items-center justify-center">
+            Lihat Standard Fasilitas
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- Courts Catalog Listing Grid -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 w-full">
+      <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <h2 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Pilihan Lapangan Badminton</h2>
+          <p class="text-xs text-gray-400 mt-1">Kami menyediakan 5 jenis lantai lapangan bulutangkis premium berstandar dunia (BWF).</p>
+        </div>
+        <span class="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 px-3 py-1 bg-emerald-500/10 rounded-full w-fit">
+          ⚽ Terawat & Bersih Setiap Jam
+        </span>
+      </div>
+
+      <div id="courts-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+        <!-- Dynamically filled with courts -->
+      </div>
+    </section>
+
+    <!-- BWF Standard Specifications Card Section -->
+    <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-12 w-full animate-fadeIn">
+      <div class="bg-gradient-to-r from-emerald-500/5 via-teal-500/5 to-indigo-500/5 rounded-3xl p-6 md:p-8 border border-emerald-500/10 dark:border-emerald-500/5 flex flex-col xl:flex-row items-center gap-6 justify-between">
+        <div class="space-y-2 md:max-w-xl text-center xl:text-left">
+          <span class="px-2.5 py-1 bg-indigo-500/10 border border-indigo-500/20 text-indigo-600 dark:text-indigo-400 rounded-full font-bold text-[10px] uppercase tracking-wider inline-block w-fit">📐 Standard Ukuran Resmi (BWF)</span>
+          <h3 class="text-xl font-black text-gray-900 dark:text-white tracking-tight">Setiap Lapangan Smash Arena Sesuai Standar BWF</h3>
+          <p class="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">Apapun jenis lantainya, ukuran garis dan ketinggian net lapangan bulutangkis yang digunakan tetap mematuhi standardisasi Federasi Bulutangkis Dunia (BWF) secara presisi.</p>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 w-full xl:w-auto shrink-0 font-mono text-[11px]">
+          <div class="p-3 bg-white dark:bg-gray-950 border border-gray-150 dark:border-gray-850 rounded-2xl flex items-center gap-2.5 shadow-xs transition-transform hover:scale-105">
+            <div class="h-8 w-8 bg-emerald-500/15 text-emerald-500 rounded-xl flex items-center justify-center shrink-0"><i data-lucide="arrows-left-right" class="w-4 h-4"></i></div>
+            <div>
+              <span class="text-[9px] uppercase font-bold text-gray-400 block leading-none mb-1">Panjang</span>
+              <span class="font-extrabold text-gray-800 dark:text-gray-200 block">13.40 Meter</span>
+            </div>
+          </div>
+          <div class="p-3 bg-white dark:bg-gray-950 border border-gray-150 dark:border-gray-850 rounded-2xl flex items-center gap-2.5 shadow-xs transition-transform hover:scale-105">
+            <div class="h-8 w-8 bg-emerald-500/15 text-emerald-500 rounded-xl flex items-center justify-center shrink-0"><i data-lucide="split" class="w-4 h-4"></i></div>
+            <div>
+              <span class="text-[9px] uppercase font-bold text-gray-400 block leading-none mb-1">Lebar Ganda</span>
+              <span class="font-extrabold text-gray-800 dark:text-gray-200 block">6.10 Meter</span>
+            </div>
+          </div>
+          <div class="p-3 bg-white dark:bg-gray-950 border border-gray-150 dark:border-gray-850 rounded-2xl flex items-center gap-2.5 shadow-xs transition-transform hover:scale-105">
+            <div class="h-8 w-8 bg-emerald-500/15 text-emerald-500 rounded-xl flex items-center justify-center shrink-0"><i data-lucide="shrink" class="w-4 h-4"></i></div>
+            <div>
+              <span class="text-[9px] uppercase font-bold text-gray-400 block leading-none mb-1">Lebar Tunggal</span>
+              <span class="font-extrabold text-gray-800 dark:text-gray-200 block">5.18 Meter</span>
+            </div>
+          </div>
+          <div class="p-3 bg-white dark:bg-gray-950 border border-gray-150 dark:border-gray-850 rounded-2xl flex items-center gap-2.5 shadow-xs transition-transform hover:scale-105">
+            <div class="h-8 w-8 bg-emerald-500/15 text-emerald-500 rounded-xl flex items-center justify-center shrink-0"><i data-lucide="chevrons-up-down" class="w-4 h-4"></i></div>
+            <div>
+              <span class="text-[9px] uppercase font-bold text-gray-400 block leading-none mb-1">Tinggi Net</span>
+              <span class="font-extrabold text-gray-800 dark:text-gray-200 block">1.524 Meter</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Active Promo Slider Cards -->
+    <section class="bg-gray-100 dark:bg-gray-950 transition-colors py-12 px-4">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="mb-8">
+          <h2 class="text-xl font-black tracking-tight text-gray-900 dark:text-white">Daftar Promo Aktif Terbaru</h2>
+          <p class="text-xs text-gray-400 mt-1">Gunakan kode kupon di bawah ini saat checkout pemesanan untuk potongan harga spesial.</p>
+        </div>
+
+        <div id="promos-container" class="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <!-- Dynamically populated promos -->
+        </div>
+      </div>
+    </section>
+
+    <!-- Facilities list standard bento-style section -->
+    <section id="section-fasilitas" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 w-full">
+      <div class="text-center max-w-2xl mx-auto mb-10">
+        <h2 class="text-2xl font-black tracking-tight text-gray-900 dark:text-white">Fasilitas Penunjang GOR</h2>
+        <p class="text-xs text-gray-400 mt-1.5 leading-relaxed">Nikmati kenyamanan bermain bulutangkis dengan ketersediaan fasilitas yang lengkap dan modern untuk memanjakan seluruh pemain.</p>
+      </div>
+
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="p-5 rounded-2xl bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 text-center flex flex-col items-center gap-3">
+          <div class="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center"><i data-lucide="parking-circle" class="w-5 h-5"></i></div>
+          <span class="font-bold text-xs text-gray-900 dark:text-white">Area Parkir Luas</span>
+          <p class="text-[10px] text-gray-400 leading-relaxed">Keamanan CCTV 24 Jam untuk Mobil & Motor.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 text-center flex flex-col items-center gap-3">
+          <div class="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center"><i data-lucide="heart" class="w-5 h-5"></i></div>
+          <span class="font-bold text-xs text-gray-900 dark:text-white">Mushola Bersih</span>
+          <p class="text-[10px] text-gray-400 leading-relaxed">Ruang ibadah nyaman lengkap sarana wudhu.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 text-center flex flex-col items-center gap-3">
+          <div class="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center"><i data-lucide="shower-head" class="w-5 h-5"></i></div>
+          <span class="font-bold text-xs text-gray-900 dark:text-white">Toilet & Shower</span>
+          <p class="text-[10px] text-gray-400 leading-relaxed">Ruang shower terpisah, air bersih melimpah.</p>
+        </div>
+        <div class="p-5 rounded-2xl bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 text-center flex flex-col items-center gap-3">
+          <div class="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center"><i data-lucide="coffee" class="w-5 h-5"></i></div>
+          <span class="font-bold text-xs text-gray-900 dark:text-white">Kantin Enerjik</span>
+          <p class="text-[10px] text-gray-400 leading-relaxed">Tersedia isotonic drinks, kopi, kok, & grip raket.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Hubungi Kami Message form section -->
+    <section class="bg-gray-100 dark:bg-gray-950 transition-colors py-12 px-4 shadow-inner">
+      <div class="max-w-3xl mx-auto bg-white dark:bg-gray-900 rounded-2xl p-6 sm:p-8 border border-gray-200/50 dark:border-gray-800/80">
+        <h3 class="text-lg font-black tracking-tight text-emerald-600 dark:text-emerald-400 mb-1 flex items-center gap-1.5 justify-center sm:justify-start">
+          <i data-lucide="message-square-text" class="w-5 h-5"></i> Hubungi Manajemen Pusat
+        </h3>
+        <p class="text-xs text-gray-400 mb-6 text-center sm:text-left">Kirim pesan pertanyaan, masukan, atau keluhan Anda. Kami akan menjawab via email secepatnya.</p>
+        
+        <form id="contact-form" onsubmit="handleContactSubmit(event)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <input type="text" id="contact-nama" placeholder="Nama Lengkap" required class="p-3 bg-gray-50 dark:bg-gray-950 text-xs rounded-xl border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <input type="email" id="contact-email" placeholder="Alamat Email" required class="p-3 bg-gray-50 dark:bg-gray-950 text-xs rounded-xl border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          <textarea id="contact-pesan" placeholder="Tulis rincian pesan Anda di sini..." required class="p-3 bg-gray-50 dark:bg-gray-950 text-xs rounded-xl border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 sm:col-span-2 h-24 resize-none"></textarea>
+          <button type="submit" class="p-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl cursor-pointer shadow-md transition-all sm:col-span-2 active:scale-95">
+            Kirim Pertanyaan
+          </button>
+        </form>
+      </div>
+    </section>
+  </main>
+
+
+  <!-- CUSTOMER DASHBOARD PANEL VIEW -->
+  <main id="view-customer" class="hidden flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col md:flex-row gap-8 animate-fadeIn">
+    <!-- Sidebar nav button deck -->
+    <aside class="w-full md:w-64 shrink-0 flex flex-row md:flex-col gap-2 overflow-x-auto pb-3 md:pb-0 scrollbar-hide">
+      <!-- User Info Badge -->
+      <div class="hidden md:flex flex-col items-center p-5 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl text-center mb-4 transition-colors">
+        <img id="cust-profile-pic" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=150&q=80" class="h-16 w-16 rounded-full border-2 border-emerald-500 object-cover mb-3" alt="Foto Profil">
+        <span id="cust-profile-name" class="font-extrabold text-sm text-gray-800 dark:text-white">Active Member</span>
+        <span class="text-[10px] uppercase font-bold text-gray-400 mt-0.5">Bronze Member GOR</span>
+      </div>
+
+      <button onclick="switchCustomerTab('book')" id="btn-cust-book" class="px-4 py-3 bg-emerald-500 dark:bg-emerald-600 text-white flex items-center gap-2.5 rounded-xl font-bold text-xs cursor-pointer select-none shrink-0 transition-all">
+        <i data-lucide="calendar" class="w-4 h-4"></i> Booking Sesi Lapangan
+      </button>
+      <button onclick="switchCustomerTab('bookings')" id="btn-cust-bookings" class="px-4 py-3 bg-white dark:bg-gray-950 text-gray-500 dark:text-gray-400 hover:bg-emerald-50/10 flex items-center gap-2.5 rounded-xl font-bold text-xs cursor-pointer select-none shrink-0 border border-gray-100 dark:border-gray-800/80 transition-all">
+        <i data-lucide="receipt" class="w-4 h-4"></i> Riwayat & Pembayaran
+      </button>
+      <button onclick="switchCustomerTab('profile')" id="btn-cust-profile" class="px-4 py-3 bg-white dark:bg-gray-950 text-gray-500 dark:text-gray-400 hover:bg-emerald-50/10 flex items-center gap-2.5 rounded-xl font-bold text-xs cursor-pointer select-none shrink-0 border border-gray-100 dark:border-gray-800/80 transition-all">
+        <i data-lucide="user-cog" class="w-4 h-4"></i> Pengaturan Akun
+      </button>
+      <button onclick="handleLogout()" class="relative z-10 px-4 py-3 bg-red-50 dark:bg-red-950/20 text-red-500 hover:bg-red-500 hover:text-white dark:hover:bg-red-500 dark:hover:text-white flex items-center gap-2.5 rounded-xl font-bold text-xs cursor-pointer select-none shrink-0 border border-red-200 dark:border-red-900/30 transition-all active:scale-95" shadow-xs>
+        <i data-lucide="log-out" class="w-4 h-4 pointer-events-none"></i> Keluar Akun
+      </button>
+    </aside>
+
+    <!-- Sub dashboard tabs screen boards -->
+    <section class="flex-grow">
+      
+      <!-- TAB A: Booking Sesi Form Board -->
+      <div id="cust-tab-book">
+        <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 shadow-xs transition-colors">
+          <h2 class="text-xl font-black text-gray-900 dark:text-white mb-1 tracking-tight flex items-center gap-1.5">
+            <i data-lucide="sparkles" class="text-emerald-500 w-5 h-5"></i> Formulir Sewa Lapangan Bulutangkis
+          </h2>
+          <p class="text-xs text-gray-400 mb-6">Pilih lapangan, tentukan tanggal bermain, pilih jam kosong, dan dapatkan potongan harga menggiurkan!</p>
+
+          <form onsubmit="handleBookingSubmit(event)" class="space-y-6">
+            <!-- 1. Court choice select mapping -->
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Langkah 1: Pilih Lapangan GOR</label>
+              <div id="booking-court-select" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <!-- Dynamically populated options with active selection class -->
+              </div>
+            </div>
+
+            <!-- 2. Date input choice mapping -->
+            <div class="max-w-xs flex flex-col gap-2">
+              <label class="text-xs font-extrabold text-gray-400 uppercase tracking-wider" for="booking-date-picker">Langkah 2: Tentukan Tanggal Bermain</label>
+              <input type="date" id="booking-date-picker" onchange="handleBookingDateChanged()" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs font-bold rounded-xl border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            </div>
+
+            <!-- 3. Slots Sesi multiselect board tracker -->
+            <div class="flex flex-col gap-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Langkah 3: Pilih Sesi Jam (Dapat pilih beberapa sesi)</label>
+                <div class="flex gap-2 text-[10px]">
+                  <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded bg-gray-100 dark:bg-gray-800"></span> Tersedia</span>
+                  <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded bg-emerald-500"></span> Terpilih</span>
+                  <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded bg-red-400"></span> Dipesan Orang</span>
+                </div>
+              </div>
+              <div id="booking-slots-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                <!-- Session hourly boxes are generated dynamically here based on date & court -->
+              </div>
+            </div>
+
+            <!-- 3b. Payment Method select mapping -->
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Langkah 4: Pilih Metode Pembayaran</label>
+              <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <label class="border-2 border-emerald-500 bg-emerald-500/5 dark:bg-emerald-500/10 p-3.5 rounded-2xl cursor-pointer hover:border-emerald-500 transition-all flex flex-col justify-between h-20 payment-method-card" onclick="selectPaymentMethod('bca')">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-xs text-gray-900 dark:text-white">Bank BCA</span>
+                    <input type="radio" name="payment-method-radio" id="pay-bca" checked class="accent-emerald-500">
+                  </div>
+                  <span class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 block">Transfer Instan Luar Biasa</span>
+                </label>
+                <label class="border-2 border-gray-200 dark:border-gray-800 p-3.5 rounded-2xl cursor-pointer hover:border-emerald-500 transition-all flex flex-col justify-between h-20 payment-method-card" onclick="selectPaymentMethod('mandiri')">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-xs text-gray-900 dark:text-white">Bank Mandiri</span>
+                    <input type="radio" name="payment-method-radio" id="pay-mandiri" class="accent-emerald-500">
+                  </div>
+                  <span class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 block">Transfer Bank Mandiri</span>
+                </label>
+                <label class="border-2 border-gray-200 dark:border-gray-800 p-3.5 rounded-2xl cursor-pointer hover:border-emerald-500 transition-all flex flex-col justify-between h-20 payment-method-card" onclick="selectPaymentMethod('qris')">
+                  <div class="flex items-center justify-between">
+                    <span class="font-black text-xs text-gray-900 dark:text-white">QRIS (E-Wallet)</span>
+                    <input type="radio" name="payment-method-radio" id="pay-qris" class="accent-emerald-500">
+                  </div>
+                  <span class="text-[9px] text-gray-400 dark:text-gray-500 mt-1 block">GoPay, OVO, Dana, LinkAja</span>
+                </label>
+              </div>
+            </div>
+
+            <!-- 4. Coupon Promo dynamic discount apply input -->
+            <div class="flex flex-col gap-2">
+              <label class="text-xs font-extrabold text-gray-400 uppercase tracking-wider" for="booking-promo-code">Kupon Potongan Diskon (Opsional)</label>
+              <div class="flex gap-2 max-w-sm">
+                <input type="text" id="booking-promo-code" placeholder="Contoh: SMASH20" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs font-mono font-bold rounded-xl border border-gray-200 dark:border-gray-800 focus:outline-none focus:ring-1 focus:ring-emerald-500 uppercase flex-grow">
+                <button type="button" onclick="applyPromoCode()" class="px-4 py-3 bg-gray-200 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-emerald-500 dark:hover:bg-emerald-600 hover:text-white font-black text-xs rounded-xl cursor-pointer active:scale-95 transition-all">
+                  Terapkan
+                </button>
+              </div>
+              <p id="promo-notice" class="text-[10px] text-gray-400 leading-none mt-1"></p>
+            </div>
+
+            <!-- 5. Interactive LIVE billing bill calculations -->
+            <div class="bg-gray-50 dark:bg-gray-900/60 rounded-2xl p-4 border border-dashed border-gray-200 dark:border-gray-800 space-y-2 text-xs">
+              <div class="flex justify-between text-gray-400">
+                <span>Subtotal Sesi Penyewaan</span>
+                <span id="bill-subtotal" class="font-bold text-gray-600 dark:text-gray-300">Rp 0</span>
+              </div>
+              <div class="flex justify-between text-gray-400">
+                <span>Diskon Kupon</span>
+                <span id="bill-discount" class="font-bold text-red-500">- Rp 0</span>
+              </div>
+              <div class="flex justify-between border-t border-gray-200 dark:border-gray-800 pt-2 text-sm font-black">
+                <span class="text-gray-800 dark:text-white">Estimasi Total Bayar</span>
+                <span id="bill-grandtotal" class="text-emerald-500">Rp 0</span>
+              </div>
+            </div>
+
+            <button type="submit" class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs rounded-xl shadow-md active:scale-95 cursor-pointer transition-all uppercase flex items-center justify-center gap-1.5">
+              <i data-lucide="check-circle" class="w-4 h-4"></i> Selesaikan Registrasi Booking & Dapatkan Invoice
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- TAB B: History Riwayat & Pembayaran Board -->
+      <div id="cust-tab-bookings" class="hidden space-y-6">
+        <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 transition-colors">
+          <h2 class="text-lg font-black text-gray-900 dark:text-white mb-1 tracking-tight flex items-center gap-1.5">
+            <i data-lucide="receipt" class="w-5 h-5 text-emerald-500"></i> Riwayat Transaksi Booking Saya
+          </h2>
+          <p class="text-xs text-gray-400 mb-6">Patuhi batas waktu pembayaran untuk mencegah otomatisasi pembatalan sewa lapangan.</p>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-gray-100 dark:border-gray-800 text-gray-400 font-extrabold uppercase tracking-wide">
+                  <th class="py-3 px-2">ID Booking</th>
+                  <th class="py-3 px-2">Lapangan GOR</th>
+                  <th class="py-3 px-2">Tanggal Main</th>
+                  <th class="py-3 px-2">Sesi Dipilih (Durasi)</th>
+                  <th class="py-3 px-2">Grand Total</th>
+                  <th class="py-3 px-2">Status</th>
+                  <th class="py-3 px-2 text-right">Aksi Tindakan</th>
+                </tr>
+              </thead>
+              <tbody id="customer-booking-rows" class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-800 dark:text-gray-200">
+                <!-- Dynamically packed -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB C: Profile Account Settings -->
+      <div id="cust-tab-profile" class="hidden">
+        <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 transition-colors">
+          <h2 class="text-lg font-black text-gray-900 dark:text-white mb-1 tracking-tight flex items-center gap-1.5">
+            <i data-lucide="user-cog" class="w-5 h-5 text-emerald-500"></i> Pengaturan Informasi Akun Member
+          </h2>
+          <p class="text-xs text-gray-400 mb-6">Sesuaikan nama resmi pemesanan untuk kenyamanan validasi gerbang pas masuk GOR.</p>
+
+          <form onsubmit="handleProfileUpdate(event)" class="space-y-4 max-w-md">
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-bold text-gray-500">Nama Resmi Member</label>
+              <input type="text" id="profile-name" required class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-800 focus:outline-none">
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-bold text-gray-500">Alamat Email Terdaftar (Tidak dapat diedit)</label>
+              <input type="email" id="profile-email" disabled class="p-3 bg-gray-100 dark:bg-gray-800 text-xs rounded-xl border border-gray-200 dark:border-gray-800 text-gray-400 cursor-not-allowed">
+            </div>
+            <div class="flex flex-col gap-1">
+              <label class="text-[11px] font-bold text-gray-500">Ganti Password</label>
+              <div class="relative flex items-center">
+                <input type="password" id="profile-password" placeholder="Kosongkan jika tidak ingin diubah" class="w-full p-3 pr-10 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-800 focus:outline-none">
+                <button type="button" onclick="togglePasswordVisibility('profile-password')" class="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer focus:outline-none flex items-center" title="Tampilkan Password">
+                  <i data-lucide="eye" id="eye-icon-profile-password" class="w-4 h-4"></i>
+                </button>
+              </div>
+            </div>
+            <button type="submit" class="p-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+              Simpan Perubahan Akun
+            </button>
+          </form>
+
+          <!-- Fallback Logout Card inside Settings Panel -->
+          <div class="mt-8 pt-6 border-t border-gray-100 dark:border-gray-800/60 max-w-md">
+            <h4 class="text-xs font-black text-gray-900 dark:text-white uppercase tracking-wider mb-2">Sesi & Keamanan Akun</h4>
+            <p class="text-[11px] text-gray-400 mb-4 leading-relaxed">Apakah Anda ingin keluar dari akun member Smash Arena saat ini?</p>
+            <button onclick="handleLogout()" class="w-full sm:w-auto px-5 py-3 bg-red-500/10 hover:bg-red-600 text-red-500 hover:text-white font-black text-xs rounded-xl transition-all cursor-pointer flex items-center justify-center gap-2 active:scale-95">
+              <i data-lucide="log-out" class="w-4 h-4"></i> Keluar Dari Akun Anda
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+
+  <!-- ADMIN DASHBOARD PANEL VIEW BOARD -->
+  <main id="view-admin" class="hidden flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8 animate-fadeIn">
+    <!-- Admin Premium Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-150 dark:border-gray-800 pb-5">
+      <div>
+        <h2 class="text-xl font-black text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+          <span class="inline-block h-2.5 w-2.5 rounded-full bg-red-500 animate-pulse"></span>
+          Control Panel (Mode Eksekutif Admin)
+        </h2>
+        <p class="text-xs text-gray-400 mt-1.5">Kelola reservasi lapangan badminton, update status billing, kustomisasi promo, dan monitor inbox pelanggan.</p>
+      </div>
+      <button onclick="handleLogout()" class="px-4 py-2.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-500 hover:bg-red-650 hover:text-white text-xs font-black rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs active:scale-95 shrink-0 self-start sm:self-auto">
+        <i data-lucide="log-out" class="w-3.5 h-3.5 pointer-events-none"></i> Keluar Admin
+      </button>
+    </div>
+
+    <!-- Admin Statistics summary widget header -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div onclick="switchAdminTab('bookings')" title="Klik untuk lihat daftar sewa" class="p-4 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 group shadow-xs">
+        <div class="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="line-chart" class="w-5 h-5"></i></div>
+        <div class="min-w-0">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Pendapatan</span>
+          <span id="stat-revenue" class="text-sm font-black text-gray-900 dark:text-white block mt-0.5">Rp 0</span>
+        </div>
+      </div>
+      <div onclick="switchAdminTab('bookings')" title="Klik untuk lihat daftar sewa" class="p-4 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 group shadow-xs">
+        <div class="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="bookmark-check" class="w-5 h-5"></i></div>
+        <div class="min-w-0">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Sewa</span>
+          <span id="stat-bookings" class="text-sm font-black text-gray-900 dark:text-white block mt-0.5">0 Transaksi</span>
+        </div>
+      </div>
+      <div onclick="switchAdminTab('users')" title="Klik untuk lihat daftar pelanggan" class="p-4 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 group shadow-xs">
+        <div class="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="users" class="w-5 h-5"></i></div>
+        <div class="min-w-0">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Total Member</span>
+          <span id="stat-users" class="text-sm font-black text-gray-900 dark:text-white block mt-0.5">0 Pengguna</span>
+        </div>
+      </div>
+      <div onclick="switchAdminTab('messages')" title="Klik untuk lihat daftar keluhan" class="p-4 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-2xl flex items-center gap-3 cursor-pointer hover:bg-emerald-500/5 hover:border-emerald-500/20 hover:-translate-y-0.5 active:translate-y-0 transition-all duration-200 group shadow-xs">
+        <div class="h-10 w-10 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform"><i data-lucide="message-square" class="w-5 h-5"></i></div>
+        <div class="min-w-0">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Keluhan/Masukan</span>
+          <span id="stat-messages" class="text-sm font-black text-gray-900 dark:text-white block mt-0.5">0 Inbox</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab bar picker logic for admin views -->
+    <div class="border-b border-gray-150 dark:border-gray-800 mb-6 h-auto">
+      <div class="flex overflow-x-auto scrollbar-hide w-full -mb-px gap-1.5 md:gap-3">
+        <button onclick="switchAdminTab('bookings')" id="btn-adm-bookings" class="px-3 md:px-5 py-3 border-b-2 border-emerald-500 text-emerald-500 text-xs font-black tracking-tight shrink-0 transition-all cursor-pointer">
+          Kelola Booking & Konfirmasi
+        </button>
+        <button onclick="switchAdminTab('courts')" id="btn-adm-courts" class="px-3 md:px-5 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-500 text-xs font-bold tracking-tight shrink-0 transition-all cursor-pointer">
+          Daftar Lapangan GOR
+        </button>
+        <button onclick="switchAdminTab('promos')" id="btn-adm-promos" class="px-3 md:px-5 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-500 text-xs font-bold tracking-tight shrink-0 transition-all cursor-pointer">
+          Kupon Promo & Diskon
+        </button>
+        <button onclick="switchAdminTab('messages')" id="btn-adm-messages" class="px-3 md:px-5 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-500 text-xs font-bold tracking-tight shrink-0 transition-all cursor-pointer">
+          Daftar Pesan Masuk
+        </button>
+        <button onclick="switchAdminTab('users')" id="btn-adm-users" class="px-3 md:px-5 py-3 border-b-2 border-transparent text-gray-400 hover:text-gray-500 text-xs font-bold tracking-tight shrink-0 transition-all cursor-pointer">
+          Daftar Pelanggan GOR
+        </button>
+      </div>
+    </div>
+
+    <!-- Active Admin boards screen state managers -->
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 shadow-xs transition-colors">
+      
+      <!-- TAB A: Bookings & Confirmation table -->
+      <div id="adm-tab-bookings">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+          <h3 class="text-base font-black text-gray-900 dark:text-white leading-none">Daftar Reservasi Semua Member GOR</h3>
+          <span class="text-[10px] uppercase font-bold text-gray-400 bg-gray-100 dark:bg-gray-900 px-3 py-1 rounded-full">
+            Tindakan Approval Instan
+          </span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 text-gray-400 font-extrabold uppercase">
+                <th class="py-3 px-2">Pihak Pemesan</th>
+                <th class="py-3 px-2">ID Booking</th>
+                <th class="py-3 px-2">Lapangan</th>
+                <th class="py-3 px-2">Tanggal / Sesi</th>
+                <th class="py-3 px-2">Estimasi Tagihan</th>
+                <th class="py-3 px-2">Status</th>
+                <th class="py-3 px-2 text-right">Aksi Konfirmasi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-booking-rows" class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-800 dark:text-gray-200">
+              <!-- Filled via dynamic looping inside script models -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB B: Courts setting page -->
+      <div id="adm-tab-courts" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <h3 class="text-base font-black text-gray-900 dark:text-white">Pengaturan Lapangan Aktif</h3>
+          <button onclick="openAddCourtModal()" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-[11px] rounded-lg cursor-pointer transition-all active:scale-95">
+            Tambah Lapangan Baru
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 text-gray-400 font-extrabold uppercase">
+                <th class="py-3 px-2">ID</th>
+                <th class="py-3 px-2">Nama Lapangan</th>
+                <th class="py-3 px-2">Bahan Lantai</th>
+                <th class="py-3 px-2">Harga Per Sesi (WIB)</th>
+                <th class="py-3 px-2">Ketersediaan</th>
+                <th class="py-3 px-2 text-right">Opsi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-court-rows" class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-800 dark:text-gray-200">
+              <!-- Filled -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB C: Promos editor page -->
+      <div id="adm-tab-promos" class="hidden space-y-6">
+        <div class="flex justify-between items-center">
+          <h3 class="text-base font-black text-gray-900 dark:text-white">Pengaturan Kode Promo Kupon</h3>
+          <button onclick="openAddPromoModal()" class="px-3.5 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-extrabold text-[11px] rounded-lg cursor-pointer transition-all active:scale-95">
+            Buat Kupon Baru
+          </button>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 text-gray-400 font-extrabold uppercase">
+                <th class="py-3 px-2">Kode Kupon</th>
+                <th class="py-3 px-2">Persentase Potongan (%)</th>
+                <th class="py-3 px-2">Deskripsi Kegunaan</th>
+                <th class="py-3 px-2">Status</th>
+                <th class="py-3 px-2 text-right">Opsi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-promo-rows" class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-800 dark:text-gray-200">
+              <!-- Filled -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB D: Messages ledger messages list -->
+      <div id="adm-tab-messages" class="hidden space-y-6">
+        <h3 class="text-base font-black text-gray-900 dark:text-white">Pesan Masuk dari Form Hubungi Kami</h3>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 text-gray-400 font-extrabold uppercase">
+                <th class="py-3 px-2">Nama Pengirim</th>
+                <th class="py-3 px-2">Email</th>
+                <th class="py-3 px-2">Rincian Keluhan/Masukan</th>
+                <th class="py-3 px-2 text-right">Opsi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-message-rows" class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-800 dark:text-gray-200">
+              <!-- Filled -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TAB E: Users ledger users list -->
+      <div id="adm-tab-users" class="hidden space-y-6">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h3 class="text-base font-black text-gray-900 dark:text-white pb-1">Daftar Akun Pelanggan GOR Smash Arena</h3>
+          <div class="relative max-w-xs w-full">
+            <span class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
+              <i data-lucide="search" class="w-3.5 h-3.5"></i>
+            </span>
+            <input type="text" id="admin-user-search" oninput="renderAdminUsers()" placeholder="Cari nama atau email..." class="pl-9 pr-3 py-1.5 w-full bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+          </div>
+        </div>
+        
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border-collapse">
+            <thead>
+              <tr class="border-b border-gray-100 dark:border-gray-800 text-gray-400 font-extrabold uppercase">
+                <th class="py-3 px-2">ID User</th>
+                <th class="py-3 px-2">Nama Pelanggan</th>
+                <th class="py-3 px-2">Email</th>
+                <th class="py-3 px-2">Role Status</th>
+                <th class="py-3 px-2 text-right">Opsi</th>
+              </tr>
+            </thead>
+            <tbody id="admin-user-rows" class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-800 dark:text-gray-200">
+              <!-- Filled -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- OWNER DASHBOARD VIEW -->
+  <main id="view-owner" class="hidden flex-grow max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8 animate-fadeIn">
+    <!-- Owner Page Header -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gray-150 dark:border-gray-800 pb-5">
+      <div>
+        <div class="flex items-center gap-2">
+          <span class="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <h2 class="text-xl font-black text-gray-950 dark:text-white tracking-tight">
+            Dashboard Pemilik (Executive Insights)
+          </h2>
+        </div>
+        <p class="text-xs text-gray-400 mt-1.5 font-sans">Akses laporan keuangan bulanan GOR, analisis popularitas lapangan, data pelanggan VIP, dan kustomisasi pengumuman resmi GOR.</p>
+      </div>
+      <button onclick="handleLogout()" class="px-4 py-2.5 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-900/30 text-red-500 hover:bg-emerald-650 hover:text-white text-xs font-black rounded-xl transition-all cursor-pointer flex items-center justify-center gap-1.5 shadow-xs active:scale-95 shrink-0 self-start sm:self-auto">
+        <i data-lucide="log-out" class="w-3.5 h-3.5 pointer-events-none"></i> Keluar Pemilik
+      </button>
+    </div>
+
+    <!-- Owner Statistics Summary Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="p-5 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl flex items-center gap-4 shadow-xs">
+        <div class="h-12 w-12 bg-emerald-500/10 text-emerald-500 rounded-full flex items-center justify-center shrink-0"><i data-lucide="wallet" class="w-6 h-6"></i></div>
+        <div class="min-w-0">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Pendapatan Kotor</span>
+          <span id="owner-stat-gross" class="text-base sm:text-lg font-black text-gray-950 dark:text-white block mt-0.5">Rp 0</span>
+        </div>
+      </div>
+      <div class="p-5 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl flex items-center gap-4 shadow-xs">
+        <div class="h-12 w-12 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center shrink-0"><i data-lucide="badge-percent" class="w-6 h-6"></i></div>
+        <div class="min-w-0">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Potongan Kupon</span>
+          <span id="owner-stat-discount" class="text-base sm:text-lg font-black text-gray-900 dark:text-white block mt-0.5">Rp 0</span>
+        </div>
+      </div>
+      <div class="p-5 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl flex items-center gap-4 shadow-xs">
+        <div class="h-12 w-12 bg-teal-500/10 text-teal-500 rounded-full flex items-center justify-center shrink-0"><i data-lucide="coins" class="w-6 h-6"></i></div>
+        <div class="min-w-0">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Pendapatan Bersih</span>
+          <span id="owner-stat-net" class="text-base sm:text-lg font-black text-emerald-600 dark:text-emerald-400 block mt-0.5">Rp 0</span>
+        </div>
+      </div>
+      <div class="p-5 bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl flex items-center gap-4 shadow-xs">
+        <div class="h-12 w-12 bg-indigo-500/10 text-indigo-500 rounded-full flex items-center justify-center shrink-0"><i data-lucide="calendar" class="w-6 h-6"></i></div>
+        <div class="min-w-0">
+          <span class="text-[10px] text-gray-400 font-bold uppercase tracking-wider block">Sesi Di-booking</span>
+          <span id="owner-stat-bookings" class="text-base sm:text-lg font-black text-gray-950 dark:text-white block mt-0.5">0 Sesi</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Main Content Row -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
+      <!-- Primary Col: Financial list & analysis -->
+      <div class="lg:col-span-2 space-y-8 flex flex-col">
+        
+        <!-- Executive Financial Ledger -->
+        <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 sm:p-6 shadow-xs flex-grow flex flex-col">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+            <div>
+              <h3 class="text-base font-black text-gray-905 dark:text-white leading-none">Laporan Arus Kas Masuk (Ledger Keuangan)</h3>
+              <p class="text-[11px] text-gray-400 mt-1 font-sans">Daftar transaksi sewa yang telah lunas/disetujui oleh sistem administrasi.</p>
+            </div>
+            <span class="text-[10px] uppercase font-bold text-emerald-600 bg-emerald-500/10 px-3 py-1 rounded-full w-fit">
+              Arus Kas Masuk
+            </span>
+          </div>
+
+          <div class="overflow-x-auto flex-grow bg-white dark:bg-transparent rounded-2xl">
+            <table class="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr class="border-b border-gray-100 dark:border-gray-805 text-gray-400 font-extrabold uppercase text-[10px] tracking-wider">
+                  <th class="py-3 px-2">Tanggal</th>
+                  <th class="py-3 px-2">ID Sewa</th>
+                  <th class="py-3 px-2">Customer</th>
+                  <th class="py-3 px-2">Lapangan</th>
+                  <th class="py-3 px-2">Subtotal</th>
+                  <th class="py-3 px-2">Diskon</th>
+                  <th class="py-3 px-2 text-right">Net Penerimaan</th>
+                </tr>
+              </thead>
+              <tbody id="owner-ledger-rows" class="divide-y divide-gray-100 dark:divide-gray-800 text-gray-800 dark:text-gray-200">
+                <!-- Filled via js -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Occupancy & Court Popularity Analysis -->
+        <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 sm:p-6 shadow-xs">
+          <div class="mb-5">
+            <h3 class="text-base font-black text-gray-950 dark:text-white leading-none">Analisis Penjualan & Margin per Lapangan</h3>
+            <p class="text-[11px] text-gray-400 mt-1 font-sans">Realisasi kumulatif pendapatan kotor dan bersih dari masing-masing jenis lapangan bulutangkis.</p>
+          </div>
+          <div id="owner-court-stats" class="space-y-4">
+            <!-- Dynamically populated bars -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Secondary Col: Customer logs & Policy controls -->
+      <div class="space-y-8">
+        
+        <!-- Owner Controls: Announcement & Business toggle -->
+        <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 sm:p-6 shadow-xs">
+          <h3 class="text-base font-black text-gray-950 dark:text-white mb-2 leading-none">Operational Controls</h3>
+          <p class="text-[11px] text-gray-400 mb-5 font-sans">Atur status bisnis operasional GOR dan siarkan pengumuman langsung.</p>
+          
+          <div class="space-y-5">
+            <!-- Status GOR Toggle -->
+            <div class="p-3.5 bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-2xl flex flex-col gap-2">
+              <span class="text-[10px] font-black uppercase text-gray-400 block leading-none tracking-wider">Status Operasional GOR</span>
+              <div class="flex items-center justify-between">
+                <span id="owner-gor-status-txt" class="text-xs font-extrabold text-emerald-600 dark:text-emerald-400">GOR Dibuka Untuk Reservasi</span>
+                <button onclick="toggleGorStatus()" id="owner-status-toggle-btn" class="px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white font-extrabold text-[10px] rounded-lg cursor-pointer transition-all active:scale-95">
+                  Tutup GOR
+                </button>
+              </div>
+            </div>
+
+            <!-- Announcement Input Form -->
+            <div class="space-y-2">
+              <label class="text-[11px] font-black uppercase text-gray-400 block leading-none tracking-wider">Siarkan Pengumuman (Pemain & Tamu)</label>
+              <textarea id="owner-announcement-input" placeholder="Masukkan pengumuman GOR terbaru..." class="w-full text-xs p-3 bg-gray-50 dark:bg-gray-900 border border-gray-150 dark:border-gray-800 rounded-2xl h-24 focus:outline-emerald-500 focus:outline focus:outline-1 transition-all leading-normal text-gray-800 dark:text-gray-100"></textarea>
+              <button onclick="publishAnnouncement()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 font-sans">
+                <i data-lucide="megaphone" class="w-3.5 h-3.5"></i> Siarkan ke Semua Pengunjung
+              </button>
+            </div>
+
+            <!-- Reset Database Control -->
+            <div class="p-3.5 bg-red-500/5 dark:bg-red-950/10 border border-red-500/15 dark:border-red-900/20 rounded-2xl flex flex-col gap-2">
+              <span class="text-[10px] font-black uppercase text-red-500 block leading-none tracking-wider">Sistem Reset Data GOR</span>
+              <p class="text-[10.5px] text-gray-400 leading-normal font-sans">Menghapus seluruh akun pelanggan dan seluruh riwayat transaksi sewa GOR secara permanen untuk memulai ulang sesi baru.</p>
+              <button onclick="resetBusinessData()" class="w-full py-2 bg-red-600 hover:bg-red-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1.5 font-sans">
+                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> Reset Booking & Pelanggan
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VIP Regular Customer Analysis -->
+        <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 sm:p-6 shadow-xs">
+          <div class="mb-4">
+            <h3 class="text-base font-black text-gray-950 dark:text-white leading-none">Peringkat Pelanggan VIP GOR</h3>
+            <p class="text-[11px] text-gray-400 mt-1 font-sans">Daftar pemain reguler / loyal bulutangkis diurutkan berdasarkan kontribusi sewa tertinggi.</p>
+          </div>
+          <div id="owner-vip-customers" class="space-y-3.5">
+            <!-- Dynamically populated profiles list -->
+          </div>
+        </div>
+
+        <!-- Promo effectiveness analysis -->
+        <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 rounded-3xl p-5 sm:p-6 shadow-xs">
+          <div class="mb-4">
+            <h3 class="text-base font-black text-gray-950 dark:text-white leading-none">Efektivitas Kupon Promo</h3>
+            <p class="text-[11px] text-gray-400 mt-1 font-sans">Statistik berapa kali kupon digunakan oleh pelanggan bulutangkis Smash Arena.</p>
+          </div>
+          <div id="owner-promo-use-stats" class="space-y-3">
+            <!-- Dynamically populated promo metrics -->
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+
+  <!-- FOOTER BRAND INFO -->
+  <footer class="border-t border-gray-100 dark:border-gray-800 bg-white dark:bg-gray-950 py-10 mt-auto transition-colors text-xs text-gray-400">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
+      <div class="space-y-3">
+        <div class="flex items-center gap-2">
+          <div class="h-6 w-6 bg-emerald-600 rounded flex items-center justify-center text-white font-extrabold text-xs">S</div>
+          <span class="font-extrabold tracking-tight text-emerald-600">SMASH ARENA</span>
+        </div>
+        <p class="leading-relaxed">Sistem Informasi Manajemen Reservasi GOR Badminton modern berbasis real-time data dan online payments.</p>
+      </div>
+      <div class="space-y-2">
+        <h4 class="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-[10px]">Alamat GOR</h4>
+        <p class="leading-relaxed text-[11px]"><i data-lucide="map-pin" class="inline w-3 h-3 text-emerald-500 mr-1"></i> Jl. Hubungan Tanpa Status (HTS) No. 404, Kelurahan Friendzone, Kecamatan Harapan Palsu, Binjai, Sumatera Utara, 20714</p>
+      </div>
+      <div class="space-y-2">
+        <h4 class="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-[10px]">Informasi Kontak</h4>
+        <p class="text-[11px]"><i data-lucide="phone" class="inline w-3 h-3 text-emerald-500 mr-1"></i> WhatsApp: +62 897-1178-935</p>
+        <p class="text-[11px]"><i data-lucide="mail" class="inline w-3 h-3 text-emerald-500 mr-1"></i> Admin: contact@smasharena.com</p>
+      </div>
+      <div class="space-y-2">
+        <h4 class="font-bold text-gray-900 dark:text-white uppercase tracking-wider text-[10px]">Layanan GOR</h4>
+        <p class="leading-relaxed">Setiap Hari Kerja & Akhir Pekan<br><span class="font-bold text-emerald-500">Mulai: 08:00 - 22:00 WIB</span></p>
+      </div>
+    </div>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-gray-100 dark:border-gray-800 mt-8 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px]">
+      <p>© 2026 Smash Arena Badminton GOR. Hak Cipta Dilindungi Undang-Undang.</p>
+      <p class="text-right flex items-center gap-1">Made with <i data-lucide="heart" class="w-3 h-3 text-red-500 fill-red-500"></i> for Badminton Players</p>
+    </div>
+  </footer>
+
+
+  <!-- ---- FLOATING TOAST POPUPS NOTIFICATION ---- -->
+  <div id="toast-wrapper" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5 max-w-sm"></div>
+
+
+  <!-- --- MODAL DIALOG 1: LOGIN --- -->
+  <div id="modal-login" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative animate-fadeIn transition-colors text-xs">
+      <button onclick="closeModal('login')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-1.5 mb-2">
+        <i data-lucide="shield-check" class="text-emerald-500 w-5 h-5"></i> Masuk Pembukuan GOR
+      </h3>
+      <p class="text-gray-400 mb-5 leading-relaxed">Gunakan kredensial akun Anda untuk masuk ke sistem GOR.</p>
+      
+      <form id="login-form" onsubmit="handleLoginSubmit(event)" class="space-y-4">
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Alamat Email</label>
+          <input type="email" id="login-email" required placeholder="Contoh: budi@gmail.com" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Kata Sandi</label>
+          <div class="relative flex items-center">
+            <input type="password" id="login-password" required placeholder="Masukkan password Anda" class="w-full p-3 pr-10 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-851 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+            <button type="button" onclick="togglePasswordVisibility('login-password')" class="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer focus:outline-none flex items-center" title="Tampilkan Password">
+              <i data-lucide="eye" id="eye-icon-login-password" class="w-4 h-4"></i>
+            </button>
+          </div>
+        </div>
+
+        <button type="submit" class="w-full mt-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+          Masuk ke Dashboard
+        </button>
+      </form>
+      <p class="text-center text-gray-400 mt-5">Belum memiliki akun? <button onclick="switchLoginRegisterModal()" class="text-emerald-500 hover:underline font-bold">Daftar Akun Baru Sini</button></p>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 2: REGISTER --- -->
+  <div id="modal-register" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative animate-fadeIn transition-colors text-xs">
+      <button onclick="closeModal('register')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-1.5 mb-2">
+        <i data-lucide="user-plus" class="text-emerald-500 w-5 h-5"></i> Daftar Anggota Baru GOR
+      </h3>
+      <p class="text-gray-400 mb-5 leading-relaxed">Gabung sekarang untuk mulai mengamankan sewa GOR bulutangkis favorit Anda secara online.</p>
+      
+      <form id="register-form" onsubmit="handleRegisterSubmit(event)" class="space-y-3.5">
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Nama Lengkap</label>
+          <input type="text" id="reg-nama" required placeholder="Contoh: Budi Santoso" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Alamat Email</label>
+          <input type="email" id="reg-email" required placeholder="Contoh: budi@gmail.com" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="flex flex-col gap-1">
+            <label class="font-bold text-gray-500">Password</label>
+            <div class="relative flex items-center">
+              <input type="password" id="reg-password" required placeholder="Min 6 Karakter" class="w-full p-3 pr-10 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <button type="button" onclick="togglePasswordVisibility('reg-password')" class="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer focus:outline-none flex items-center" title="Tampilkan Password">
+                <i data-lucide="eye" id="eye-icon-reg-password" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="font-bold text-gray-500">Ulangi Pass</label>
+            <div class="relative flex items-center">
+              <input type="password" id="reg-confirm" required placeholder="Konfirmasi" class="w-full p-3 pr-10 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none focus:ring-1 focus:ring-emerald-500">
+              <button type="button" onclick="togglePasswordVisibility('reg-confirm')" class="absolute right-3 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 cursor-pointer focus:outline-none flex items-center" title="Tampilkan Password">
+                <i data-lucide="eye" id="eye-icon-reg-confirm" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+        <button type="submit" class="w-full mt-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+          Konfirmasi Registrasi Anggota
+        </button>
+      </form>
+      <p class="text-center text-gray-400 mt-5">Sudah mempunyai akun? <button onclick="switchRegisterLoginModal()" class="text-emerald-500 hover:underline font-bold">Login Saja Sini</button></p>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 3: PAY BILLING/UPLOAD PROOF --- -->
+  <div id="modal-pay" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl w-full max-w-md shadow-2xl relative animate-fadeIn transition-colors text-xs max-h-[92vh] overflow-y-auto">
+      <button onclick="closeModal('pay')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-1.5 mb-2">
+        <i data-lucide="wallet" class="text-emerald-500 w-5 h-5"></i> Cara Melakukan Pembayaran Booking GOR
+      </h3>
+      <p class="text-gray-400 mb-4 leading-relaxed">Kirim pembayaran lewat nominal presisi ke nomor rekening resmi dan unggah bukti transfer.</p>
+      
+      <div id="dynamic-payment-instructions" class="bg-emerald-500/10 rounded-xl p-4 border border-dashed border-emerald-500/20 text-[11px] text-gray-500 space-y-2 mb-4">
+        <!-- Dynamically populated based on chosen payment method -->
+      </div>
+
+      <form id="pay-proof-form" onsubmit="handlePayProofSubmit(event)" class="space-y-4">
+        <input type="hidden" id="modal-pay-booking-id">
+        <div class="flex flex-col gap-1.5">
+          <label class="font-bold text-gray-500">Nama Pengirim Rekening Transfer</label>
+          <input type="text" id="pay-sender" required placeholder="Contoh: Budi Santoso" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1.5">
+          <label class="font-bold text-gray-500">Unggah Gambar Bukti Transfer (Format JPG/PNG)</label>
+          <input type="file" id="pay-file" required accept="image/*" class="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 cursor-pointer">
+        </div>
+        <button type="submit" class="w-full mt-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+          Selesaikan Konfirmasi Transfer Pembayaran
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 4: ADD COURT & EDIT (ADMIN) --- -->
+  <div id="modal-court" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative animate-fadeIn transition-colors text-xs">
+      <button onclick="closeModal('court')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-1.5 mb-4">
+        <i data-lucide="database" class="text-emerald-500 w-5 h-5"></i> <span id="court-modal-title">Entri Lapangan Badminton</span>
+      </h3>
+      
+      <form id="court-form" onsubmit="handleCourtSave(event)" class="space-y-4">
+        <input type="hidden" id="modal-court-id">
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Nama Lapangan</label>
+          <input type="text" id="modal-court-nama" required placeholder="Contoh: Lapangan GOR 5" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Bahan Lantai Lapangan</label>
+          <select id="modal-court-lantai" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none">
+            <option value="Karpet Vinyl (PVC)">Karpet Vinyl (PVC)</option>
+            <option value="Lantai Kayu (Parket)">Lantai Kayu (Parket)</option>
+            <option value="Flexipave (Akrilik)">Flexipave (Akrilik)</option>
+            <option value="Interlock (Plastik PP)">Interlock (Plastik PP)</option>
+            <option value="Semen / Plesteran">Semen / Plesteran</option>
+          </select>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div class="flex flex-col gap-1">
+            <label class="font-bold text-gray-500">Harga Per Jam Sesi</label>
+            <input type="number" id="modal-court-harga" required placeholder="80000" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none">
+          </div>
+          <div class="flex flex-col gap-1">
+            <label class="font-bold text-gray-500">Ketersediaan Lapangan</label>
+            <select id="modal-court-tersedia" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none">
+              <option value="yes">Tersedia Aktif</option>
+              <option value="no">Tutup / Maintenis</option>
+            </select>
+          </div>
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Foto Lapangan Badminton</label>
+          <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-850 rounded-xl p-3 space-y-2">
+            <div class="flex flex-col gap-0.5">
+              <span class="text-[9px] font-bold text-gray-400">Atau Unggah berkas gambar (JPG/PNG)</span>
+              <input type="file" id="modal-court-file" accept="image/*" class="w-full text-[10px] text-gray-400 file:mr-2 file:py-1 file:px-2.5 file:rounded-lg file:border-0 file:text-[9px] file:font-black file:bg-emerald-500/10 file:text-emerald-500 hover:file:bg-emerald-500/20 cursor-pointer">
+            </div>
+            <div class="text-center font-bold text-[9px] text-gray-400">--- ATAU DENGAN TAUTAN URL ---</div>
+            <input type="url" id="modal-court-foto" placeholder="Contoh: https://images.unsplash.com/..." class="w-full p-2.5 bg-white dark:bg-gray-950 text-[11px] rounded-lg border border-gray-250 dark:border-gray-800 focus:outline-none">
+          </div>
+        </div>
+        <button type="submit" class="w-full mt-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+          Simpan Data Lapangan
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 5: ADD PROMO & EDIT (ADMIN) --- -->
+  <div id="modal-promo" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative animate-fadeIn transition-colors text-xs">
+      <button onclick="closeModal('promo')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-1.5 mb-4">
+        <i data-lucide="ticket" class="text-emerald-500 w-5 h-5"></i> Entri Kupon Potongan Promo
+      </h3>
+      
+      <form id="promo-form" onsubmit="handlePromoSave(event)" class="space-y-4">
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Kode Kupon (Uppercase)</label>
+          <input type="text" id="modal-promo-kode" required placeholder="Contoh: SMASH30" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none uppercase">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Besar Potongan Diskon (%)</label>
+          <input type="number" id="modal-promo-persen" required placeholder="30" min="1" max="100" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="font-bold text-gray-500">Penjelasan Singkat Kebaikan Kupon</label>
+          <input type="text" id="modal-promo-desc" required placeholder="Diskon Spesial 30% Member Baru Sesi GOR" class="p-3 bg-gray-50 dark:bg-gray-900 text-xs rounded-xl border border-gray-200 dark:border-gray-850 focus:outline-none">
+        </div>
+        <button type="submit" class="w-full mt-2 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+          Terbitkan Kode Promo
+        </button>
+      </form>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 6: INVOICE LEDGER TICKET PRINT PREVIEW --- -->
+  <div id="modal-print" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white text-gray-850 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative animate-fadeIn text-xs">
+      <button onclick="closeModal('print')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 cursor-pointer print:hidden"><i data-lucide="x" class="w-5 h-5"></i></button>
+      
+      <!-- Inside Printable Area standard bounding box -->
+      <div id="printable-ticket" class="space-y-4 p-2 bg-white text-gray-900">
+        <!-- Ticket voucher identity top elements -->
+        <div class="text-center pb-3 border-b-2 border-dashed border-gray-200 space-y-1">
+          <h4 class="font-black text-sm tracking-widest text-emerald-600 uppercase">TIKET INVOICE GOR</h4>
+          <span class="text-[9px] uppercase font-bold text-gray-400 tracking-wider">Smash Arena GOR Binjai (Sumatera Utara)</span>
+          <p class="text-[9px] text-gray-400 mt-1">Sistem Reservasi Tanggal Cetak: <span id="ticket-print-date" class="font-mono">--/--/--</span></p>
+        </div>
+
+        <div class="space-y-2 text-[10px]">
+          <div class="flex justify-between"><span>Nomor Ledger ID:</span><span id="ticket-id" class="font-mono font-bold text-gray-900">-</span></div>
+          <div class="flex justify-between"><span>Lapangan Terpilih:</span><span id="ticket-court" class="font-bold text-gray-900">-</span></div>
+          <div class="flex justify-between"><span>Nama Pelanggan GOR:</span><span id="ticket-user" class="font-bold text-gray-900">-</span></div>
+          <div class="flex justify-between"><span>Hari/Tanggal Main:</span><span id="ticket-date" class="font-bold text-gray-900">-</span></div>
+          <div class="flex justify-between"><span>Durasi Jam Sesi:</span><span id="ticket-sesi" class="font-bold text-emerald-600">-</span></div>
+          <div class="flex justify-between"><span>Metode Pembayaran:</span><span id="ticket-payment" class="font-bold text-gray-900 cursor-default">-</span></div>
+          <div class="flex justify-between border-t border-gray-100 pt-2 text-xs"><span>Status Verifikasi GOR:</span><span id="ticket-status" class="px-2 py-0.5 bg-emerald-500/10 text-emerald-500 font-extrabold rounded-md text-[9px] uppercase tracking-wide">-</span></div>
+        </div>
+
+        <div class="bg-gray-50 border border-gray-100 rounded-xl p-3 space-y-1 mt-2 text-[10px]">
+          <div class="flex justify-between text-gray-500"><span>Biaya Lapangan Sesi</span><span id="ticket-subtotal">Rp 0</span></div>
+          <div class="flex justify-between text-gray-500"><span>Diskon Kupon</span><span id="ticket-discount">Rp 0</span></div>
+          <div class="flex justify-between border-t border-gray-200 pt-1.5 text-xs font-black text-gray-900"><span>Total Tagihan Bayar</span><span id="ticket-grandtotal">Rp 0</span></div>
+        </div>
+
+        <!-- Ticket barcode guidelines -->
+        <div class="text-center pt-4 space-y-2 border-t-2 border-dashed border-gray-200 mt-2">
+          <div class="inline-block py-1 px-4 bg-gray-50 border border-gray-100 rounded font-mono text-[9px] font-bold text-gray-400 uppercase tracking-[6px] text-center select-none hover:scale-105 transition-all">
+            *SMASHARENA1234*
+          </div>
+          <p class="text-[9px] text-gray-400 leading-relaxed">Tunjukkan lembar struk/tiket ini saat memasuki gerbang utama lapangan Smash Arena untuk dipindai oleh admin piket.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-2.5 mt-5 print:hidden">
+        <button onclick="window.print()" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 flex items-center justify-center gap-1.5 cursor-pointer">
+          <i data-lucide="printer" class="w-4 h-4"></i> Cetak Tiket/Struk
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 9: VIEW PAYMENT PROOF --- -->
+  <div id="modal-view-proof" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl w-full max-w-md shadow-2xl relative animate-fadeIn transition-colors text-xs">
+      <button onclick="closeModal('view-proof')" class="absolute top-4 right-4 text-gray-400 hover:text-red-500 cursor-pointer"><i data-lucide="x" class="w-5 h-5"></i></button>
+      <h3 class="text-base font-black text-gray-900 dark:text-white flex items-center gap-1.5 mb-2">
+        <i data-lucide="receipt-text" class="text-emerald-500 w-5 h-5"></i> Detail Bukti Pembayaran
+      </h3>
+      <p class="text-gray-400 mb-4 leading-relaxed font-sans">Berikut adalah dokumen bukti transfer yang dilampirkan oleh pelanggan untuk dicocokkan dengan rekening koran GOR.</p>
+
+      <div id="payment-proof-container" class="space-y-4">
+        <!-- Will be populated dynamically with image or simulated receipt -->
+      </div>
+
+      <div class="flex gap-2 mt-5">
+        <button id="btn-proof-approve" class="flex-1 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer flex items-center justify-center gap-1">
+          <i data-lucide="check" class="w-4 h-4"></i> Setujui Pembayaran
+        </button>
+        <button id="btn-proof-reject" class="py-2.5 px-4 bg-red-600 hover:bg-red-700 text-white font-bold text-xs rounded-xl shadow-md transition-all active:scale-95 cursor-pointer">
+          Tolak / Batalkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 7: LOGOUT SUMMARY CONFIRMATION --- -->
+  <div id="modal-logout" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl w-full max-w-xs shadow-2xl relative animate-fadeIn transition-colors text-xs text-center">
+      <div class="h-12 w-12 bg-red-500/10 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+        <i data-lucide="log-out" class="w-6 h-6"></i>
+      </div>
+      <h3 class="text-base font-black text-gray-900 dark:text-white mb-1.5 tracking-tight">
+        Keluar Sistem GOR
+      </h3>
+      <p class="text-gray-400 dark:text-gray-500 mb-5 leading-relaxed">Apakah Anda yakin ingin mengakhiri sesi masuk Smash Arena Anda saat ini?</p>
+      
+      <div class="flex gap-2.5 justify-center">
+        <button onclick="closeModal('logout')" class="flex-1 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 cursor-pointer transition-colors">
+          Batal
+        </button>
+        <button onclick="confirmLogoutAction()" class="flex-1 py-2.5 bg-red-500 hover:bg-red-650 text-white font-black rounded-xl cursor-pointer transition-all active:scale-95">
+          Ya, Keluar
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 8: GENERAL SYSTEM/CONFIRMATION ACTION --- -->
+  <div id="modal-confirm" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-gray-950 border border-gray-100 dark:border-gray-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl relative animate-fadeIn transition-colors text-xs text-center">
+      <div id="confirm-icon-container" class="h-12 w-12 rounded-full flex items-center justify-center mx-auto mb-3">
+        <i id="confirm-icon" data-lucide="help-circle" class="w-6 h-6"></i>
+      </div>
+      <h3 id="confirm-title" class="text-base font-black text-gray-900 dark:text-white mb-1.5 tracking-tight">
+        Konfirmasi Tindakan
+      </h3>
+      <p id="confirm-message" class="text-gray-450 dark:text-gray-400 mb-6 leading-relaxed max-w-xs mx-auto"></p>
+      
+      <div class="flex gap-2.5 justify-center">
+        <button onclick="closeConfirmModal(false)" class="flex-1 py-2.5 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-850 cursor-pointer transition-colors">
+          Batal
+        </button>
+        <button onclick="closeConfirmModal(true)" id="confirm-yes-btn" class="flex-1 py-2.5 text-white font-black rounded-xl cursor-pointer transition-all active:scale-95">
+          Ya, Lanjutkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- --- MODAL DIALOG 9: ADVANCED DATABASE RESET SWITCHER --- -->
+  <div id="modal-reset-database" class="hidden fixed inset-0 z-50 bg-black/65 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+    <div class="bg-white dark:bg-gray-950 border border-gray-150 dark:border-gray-800 p-6 rounded-3xl w-full max-w-lg shadow-2xl relative transition-colors">
+      <button onclick="closeModal('reset-database')" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 cursor-pointer">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center mb-5">
+        <div class="h-12 w-12 rounded-full bg-red-500/15 text-red-500 flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="database" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-lg font-black text-gray-900 dark:text-white tracking-tight">
+          Advanced Database Maintenance Center
+        </h3>
+        <p class="text-[11px] text-gray-400 mt-1 max-w-sm mx-auto">
+          Silakan pilih jenis reset database yang Anda butuhkan untuk mengatur ulang sistem operasional GOR Smash Arena.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+        <!-- Option A: Clean Reset -->
+        <button onclick="executeResetFlow('clean')" class="p-4 text-left bg-gray-50 hover:bg-red-500/5 dark:bg-gray-900 dark:hover:bg-red-950/10 border border-gray-200 hover:border-red-500/30 dark:border-gray-850 dark:hover:border-red-950/40 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between h-full hover:scale-[1.02] active:scale-95 duration-200">
+          <div>
+            <div class="h-8 w-8 rounded-lg bg-gray-200/50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center mb-3 group-hover:bg-red-500 group-hover:text-white transition-colors duration-200">
+              <i data-lucide="trash-2" class="w-4 h-4 font-sans"></i>
+            </div>
+            <h4 class="text-xs font-black text-gray-900 dark:text-white group-hover:text-red-650 dark:group-hover:text-red-400 transition-colors">
+              Reset Bersih (Sistem Kosong)
+            </h4>
+            <p class="text-[10px] text-gray-400 mt-1 leading-normal font-medium">
+              Menghapus seluruh transaksi sewa, akun pelanggan, dan pesan masuk. Sistem akan menjadi bersih 100% untuk digunakan dari awal.
+            </p>
+          </div>
+          <span class="text-[10px] text-red-500 font-extrabold uppercase mt-4 block">Mulai Ulang Kosong &rarr;</span>
+        </button>
+
+        <!-- Option B: Premium Seed Reset -->
+        <button onclick="executeResetFlow('seed')" class="p-4 text-left bg-gray-50 hover:bg-emerald-500/5 dark:bg-gray-900 dark:hover:bg-emerald-950/10 border border-gray-200 hover:border-emerald-500/30 dark:border-gray-850 dark:hover:border-emerald-955/40 rounded-2xl transition-all cursor-pointer group flex flex-col justify-between h-full hover:scale-[1.02] active:scale-95 duration-200">
+          <div>
+            <div class="h-8 w-8 rounded-lg bg-gray-200/50 dark:bg-gray-800 text-gray-700 dark:text-gray-300 flex items-center justify-center mb-3 group-hover:bg-emerald-500 group-hover:text-white transition-colors duration-200">
+              <i data-lucide="sparkles" class="w-4 h-4 font-sans"></i>
+            </div>
+            <h4 class="text-xs font-black text-gray-900 dark:text-white group-hover:text-emerald-500 transition-colors">
+              Muat Data Demo Premium
+            </h4>
+            <p class="text-[10px] text-gray-400 mt-1 leading-normal font-medium">
+              Memulihkan database sedia ada dengan 13 pesanan simulasi, grafik occupancy, status VIP, dan pembukuan resmi GOR.
+            </p>
+          </div>
+          <span class="text-[10px] text-emerald-500 font-extrabold uppercase mt-4 block">Pulihkan Demo &rarr;</span>
+        </button>
+      </div>
+
+      <div class="flex">
+        <button onclick="closeModal('reset-database')" class="w-full py-2.5 bg-gray-50 hover:bg-gray-100 dark:bg-gray-900 dark:hover:bg-gray-850 border border-gray-200 dark:border-gray-800 text-gray-700 dark:text-gray-300 font-bold rounded-xl cursor-pointer transition-colors text-xs">
+          Batal & Tutup
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+
+
+
+  <!-- --- LOGIC ENGINE JAVASCRIPT STATE MANAGERS --- -->
+  <script type="module" src="/src/vanilla/app.js"></script>
+</body>
+</html>
